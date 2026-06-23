@@ -53,3 +53,75 @@ def test_theme_colors_keys():
 def test_binary_palette_default_returns_two_colors():
     pair = pf.binary_palette()
     assert len(pair) == 2
+
+
+import matplotlib as mpl
+from cycler import cycler
+
+
+def test_setup_light_background():
+    pf.setup(theme='light')
+    assert mpl.rcParams['figure.facecolor'] == 'white'
+    assert mpl.rcParams['axes.facecolor'] == 'white'
+
+
+def test_setup_dark_background():
+    pf.setup(theme='dark')
+    assert mpl.rcParams['figure.facecolor'] == '#1a1a1a'
+    assert mpl.rcParams['axes.facecolor'] == '#1a1a1a'
+
+
+def test_setup_black_background():
+    pf.setup(theme='black')
+    assert mpl.rcParams['figure.facecolor'] == '#000000'
+    assert mpl.rcParams['axes.facecolor'] == '#000000'
+
+
+def test_setup_dark_text_color():
+    pf.setup(theme='dark')
+    assert mpl.rcParams['text.color'] == '#e0e0e0'
+    assert mpl.rcParams['axes.labelcolor'] == '#e0e0e0'
+
+
+def test_setup_black_text_color():
+    pf.setup(theme='black')
+    assert mpl.rcParams['text.color'] == '#ffffff'
+
+
+def test_setup_legend_frameon_all_themes():
+    for theme in ('light', 'dark', 'black'):
+        pf.setup(theme=theme)
+        assert mpl.rcParams['legend.frameon'] is True, f"legend.frameon False for {theme}"
+
+
+def test_setup_default_is_light():
+    pf.setup()
+    assert mpl.rcParams['figure.facecolor'] == 'white'
+
+
+def test_setup_invalid_theme_raises():
+    with pytest.raises(ValueError, match="theme"):
+        pf.setup(theme='neon')
+
+
+def test_palette_dark_lo_shifted():
+    light_colors = pf.palette(2, theme='light')
+    dark_colors = pf.palette(2, theme='dark')
+    # Colors should differ — dark range is shifted
+    assert light_colors != dark_colors
+
+
+def test_palette_black_equals_dark():
+    dark_colors = pf.palette(4, theme='dark')
+    black_colors = pf.palette(4, theme='black')
+    assert dark_colors == black_colors
+
+
+def test_binary_palette_dark():
+    pair = pf.binary_palette(theme='dark')
+    assert len(pair) == 2
+
+
+def test_apply_style_rc_overrides_still_work():
+    pf.apply_style(theme='dark', rc_overrides={'lines.linewidth': 3.0})
+    assert mpl.rcParams['lines.linewidth'] == 3.0

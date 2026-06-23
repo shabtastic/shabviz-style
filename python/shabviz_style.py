@@ -80,6 +80,7 @@ __all__ = [
     'setup', 'apply_style', 'install_font',
     'palette', 'binary_palette',
     'SEQUENTIAL_CMAPS', 'DIVERGING_CMAPS',
+    '_THEME_COLORS', '_RANGE_LIGHT', '_RANGE_DARK', '_resolve_range',
 ]
 
 
@@ -210,35 +211,27 @@ def _resolve_range(cmap: str, lo, hi, theme: str = 'light'):
 
 
 def palette(n: int, ordered: bool = False, cmap: str = 'viridis',
-            lo: float = None, hi: float = None):
+            lo: float = None, hi: float = None, theme: str = 'light'):
     """Return n perceptually distinct colors from a viridis-family colormap.
 
     Parameters
     ----------
     n : int
-        Number of colors. n=1 returns the midpoint; n>=2 samples the colormap
-        linearly between [lo, hi]. For n=2, that's exactly the high-contrast
-        binary pair.
+        Number of colors.
     ordered : bool, default False
-        If True, return colors in colormap order (use for ordinal data:
-        low/medium/high). If False, reorder so the first two entries are the
-        colormap endpoints (max binary contrast) and the rest fill in.
+        If True, return colors in colormap order (ordinal data).
     cmap : str, default 'viridis'
         Any sequential matplotlib/seaborn colormap.
     lo, hi : float, optional
-        Sample range within the colormap. Defaults are tuned per-cmap (see
-        ``_RANGE_LIGHT``) so ``lo=0.05`` for viridis but ``0.20`` for the
-        darker mako/rocket.
-
-    Returns
-    -------
-    list of RGBA tuples (length n)
+        Sample range override. Defaults are tuned per-cmap and per-theme.
+    theme : str, default 'light'
+        One of 'light', 'dark', 'black'. Selects the sampling range table.
     """
     if n < 1:
         raise ValueError('n must be >= 1')
 
     cm = mpl.colormaps[cmap]
-    lo, hi = _resolve_range(cmap, lo, hi)
+    lo, hi = _resolve_range(cmap, lo, hi, theme)
 
     if n == 1:
         return [cm(0.5)]
@@ -251,15 +244,22 @@ def palette(n: int, ordered: bool = False, cmap: str = 'viridis',
     return colors
 
 
-def binary_palette(cmap: str = 'viridis', positions=None):
+def binary_palette(cmap: str = 'viridis', positions=None,
+                   theme: str = 'light'):
     """High-contrast binary pair from a viridis-family colormap.
 
-    With ``positions=None``, uses the cmap's default range from
-    ``_RANGE_LIGHT``. Pass ``positions=(lo, hi)`` to override.
+    Parameters
+    ----------
+    cmap : str, default 'viridis'
+        Colormap name.
+    positions : tuple of (lo, hi), optional
+        Explicit sample positions. None uses per-cmap/per-theme defaults.
+    theme : str, default 'light'
+        One of 'light', 'dark', 'black'. Used when positions is None.
     """
     cm = mpl.colormaps[cmap]
     if positions is None:
-        positions = _RANGE_LIGHT.get(cmap, _FALLBACK_RANGE)
+        positions = _resolve_range(cmap, None, None, theme)
     return [cm(positions[0]), cm(positions[1])]
 
 
@@ -281,10 +281,13 @@ def _maxdist_reorder(items):
 # rcParams
 # ---------------------------------------------------------------------------
 
-def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
-    cycle_colors = palette(6, ordered=False, cmap=cmap)
+def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter',
+                    theme: str = 'light'):
+    if theme not in _VALID_THEMES:
+        raise ValueError(f"theme must be one of {sorted(_VALID_THEMES)!r}, got {theme!r}")
+    c = _THEME_COLORS[theme]
+    cycle_colors = palette(6, ordered=False, cmap=cmap, theme=theme)
 
-    # Build sans-serif fallback list with the chosen font first
     fallbacks = [font, 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'DejaVu Sans']
     seen = set()
     sans_list = [f for f in fallbacks if not (f in seen or seen.add(f))]
@@ -295,14 +298,12 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
         'font.sans-serif':  sans_list,
         'font.size':        11,
         'font.weight':      'normal',
-        # 'stixsans' visually matches a sans-serif body. Switch to 'cm' for
-        # LaTeX-classic math, or 'stix' for a Times-like serif feel.
         'mathtext.fontset': 'stixsans',
 
         # --- Figure ---
         'figure.figsize':     (6.5, 4.5),
         'figure.dpi':         110,
-        'figure.facecolor':   'white',
+        'figure.facecolor':   c['fig_bg'],
         'figure.titlesize':   14,
         'figure.titleweight': 'medium',
 
@@ -310,7 +311,7 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
         'savefig.dpi':        300,
         'savefig.bbox':       'tight',
         'savefig.pad_inches': 0.05,
-        'savefig.facecolor':  'white',
+        'savefig.facecolor':  c['save_bg'],
         'pdf.fonttype':       42,
         'ps.fonttype':        42,
         'svg.fonttype':       'none',
@@ -319,15 +320,19 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
         'axes.titlesize':    13,
         'axes.titleweight':  'medium',
         'axes.titlepad':     10,
+        'axes.titlecolor':   c['text'],
         'axes.labelsize':    11,
         'axes.labelpad':     6,
         'axes.labelweight':  'normal',
+        'axes.labelcolor':   c['text'],
         'axes.spines.top':   False,
         'axes.spines.right': False,
         'axes.linewidth':    0.8,
-        'axes.edgecolor':    '#333333',
-        'axes.labelcolor':   '#333333',
-        'axes.facecolor':    'white',
+        'axes.edgecolor':    c['spines'],
+        'axes.facecolor':    c['axes_bg'],
+
+        # --- Text ---
+        'text.color':        c['text'],
 
         # --- Ticks ---
         'xtick.labelsize':   10,
@@ -340,14 +345,14 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
         'ytick.major.width': 0.8,
         'xtick.minor.size':  2,
         'ytick.minor.size':  2,
-        'xtick.color':       '#333333',
-        'ytick.color':       '#333333',
+        'xtick.color':       c['ticks'],
+        'ytick.color':       c['ticks'],
 
         # --- Grid ---
         'axes.grid':      False,
         'grid.linewidth': 0.5,
         'grid.alpha':     0.3,
-        'grid.color':     '#cccccc',
+        'grid.color':     c['grid'],
 
         # --- Lines & patches ---
         'lines.linewidth':       1.8,
@@ -360,7 +365,9 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
         # --- Legend ---
         'legend.fontsize':       10,
         'legend.title_fontsize': 10,
-        'legend.frameon':        False,
+        'legend.frameon':        True,
+        'legend.facecolor':      c['legend_bg'],
+        'legend.edgecolor':      c['legend_edge'],
         'legend.borderpad':      0.4,
         'legend.handlelength':   1.5,
         'legend.handletextpad':  0.6,
@@ -373,17 +380,9 @@ def _build_rcparams(cmap: str = 'viridis', font: str = 'Inter'):
 
 
 def apply_style(cmap: str = 'viridis', font: str = 'Inter',
-                rc_overrides: dict = None):
-    """Apply rcParams without touching font installation.
-
-    Parameters
-    ----------
-    cmap, font : str
-        Base colormap and font family.
-    rc_overrides : dict, optional
-        Extra rcParams applied on top of the defaults.
-    """
-    rc = _build_rcparams(cmap=cmap, font=font)
+                theme: str = 'light', rc_overrides: dict = None):
+    """Apply rcParams without touching font installation."""
+    rc = _build_rcparams(cmap=cmap, font=font, theme=theme)
     if rc_overrides:
         rc.update(rc_overrides)
     plt.rcParams.update(rc)
@@ -391,26 +390,26 @@ def apply_style(cmap: str = 'viridis', font: str = 'Inter',
 
 def setup(cmap: str = 'viridis', font: str = 'Inter',
           auto_install: bool = True, rc_overrides: dict = None,
-          verbose: bool = False) -> None:
+          verbose: bool = False, theme: str = 'light') -> None:
     """Set up the figure style: register the font (optional) and apply rcParams.
 
     Parameters
     ----------
     cmap : str, default 'viridis'
-        Sequential colormap to use as the basis for the default cycle and
-        for ``image.cmap``. Other good options: 'mako', 'rocket', 'crest',
-        'flare', 'cividis'.
+        Sequential colormap.
     font : str, default 'Inter'
-        Sans-serif body font. Auto-install supported for fonts in
-        ``_FONT_SOURCES`` ('Inter', 'Source Sans 3', 'IBM Plex Sans').
-        Other names will work if the font is already installed system-wide.
+        Sans-serif body font.
     auto_install : bool, default True
         Whether to attempt downloading and registering the font.
     rc_overrides : dict, optional
-        Extra rcParams to apply on top of the defaults. Use this for
-        per-script tweaks like ``{'figure.figsize': (8, 5)}``.
+        Extra rcParams to apply on top of the defaults.
     verbose : bool, default False
         Print status messages.
+    theme : str, default 'light'
+        Color theme. One of 'light', 'dark', 'black'.
+        'light' — white background, dark text (default).
+        'dark'  — near-black (#1a1a1a) background, light gray text.
+        'black' — pure black background, white text (TRI slide deck).
     """
     if auto_install:
         ok = install_font(font)
@@ -419,6 +418,6 @@ def setup(cmap: str = 'viridis', font: str = 'Inter',
                    else f'{font} not available; using fallback sans-serif.')
             print(f'[shabviz_style] {msg}')
 
-    apply_style(cmap=cmap, font=font, rc_overrides=rc_overrides)
+    apply_style(cmap=cmap, font=font, theme=theme, rc_overrides=rc_overrides)
     if verbose:
-        print(f'[shabviz_style] Style applied (cmap={cmap}, font={font}).')
+        print(f'[shabviz_style] Style applied (cmap={cmap}, font={font}, theme={theme}).')

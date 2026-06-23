@@ -80,7 +80,6 @@ __all__ = [
     'setup', 'apply_style', 'install_font',
     'palette', 'binary_palette',
     'SEQUENTIAL_CMAPS', 'DIVERGING_CMAPS',
-    '_THEME_COLORS', '_RANGE_LIGHT', '_RANGE_DARK', '_resolve_range',
 ]
 
 

@@ -159,9 +159,9 @@ def install_font(name: str = 'Inter', force: bool = False) -> bool:
 # Palette helpers
 # ---------------------------------------------------------------------------
 
-# Per-cmap default sample range. For darker cousins, lift the dark end so
-# the first cycle entry doesn't go nearly black.
-_DEFAULT_RANGE = {
+_VALID_THEMES = {'light', 'dark', 'black'}
+
+_RANGE_LIGHT = {
     'viridis':  (0.05, 0.92),
     'mako':     (0.20, 0.92),
     'rocket':   (0.20, 0.92),
@@ -169,11 +169,42 @@ _DEFAULT_RANGE = {
     'flare':    (0.10, 0.92),
     'cividis':  (0.05, 0.95),
 }
+_RANGE_DARK = {
+    'viridis':  (0.30, 0.95),
+    'mako':     (0.35, 0.95),
+    'rocket':   (0.35, 0.95),
+    'crest':    (0.30, 0.95),
+    'flare':    (0.30, 0.95),
+    'cividis':  (0.30, 0.95),
+}
 _FALLBACK_RANGE = (0.05, 0.92)
+_FALLBACK_RANGE_DARK = (0.30, 0.95)
+
+_THEME_COLORS = {
+    'light': dict(
+        fig_bg='white',    axes_bg='white',    save_bg='white',
+        text='#333333',    spines='#333333',   ticks='#333333',
+        grid='#cccccc',    legend_bg='white',  legend_edge='#cccccc',
+    ),
+    'dark': dict(
+        fig_bg='#1a1a1a',  axes_bg='#1a1a1a',  save_bg='#1a1a1a',
+        text='#e0e0e0',    spines='#666666',   ticks='#666666',
+        grid='#444444',    legend_bg='#1a1a1a', legend_edge='#666666',
+    ),
+    'black': dict(
+        fig_bg='#000000',  axes_bg='#000000',  save_bg='#000000',
+        text='#ffffff',    spines='#888888',   ticks='#888888',
+        grid='#333333',    legend_bg='#000000', legend_edge='#888888',
+    ),
+}
 
 
-def _resolve_range(cmap: str, lo, hi):
-    default_lo, default_hi = _DEFAULT_RANGE.get(cmap, _FALLBACK_RANGE)
+def _resolve_range(cmap: str, lo, hi, theme: str = 'light'):
+    if theme not in _VALID_THEMES:
+        raise ValueError(f"theme must be one of {sorted(_VALID_THEMES)!r}, got {theme!r}")
+    range_table = _RANGE_LIGHT if theme == 'light' else _RANGE_DARK
+    fallback = _FALLBACK_RANGE if theme == 'light' else _FALLBACK_RANGE_DARK
+    default_lo, default_hi = range_table.get(cmap, fallback)
     return (default_lo if lo is None else lo,
             default_hi if hi is None else hi)
 

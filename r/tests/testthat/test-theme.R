@@ -54,3 +54,8 @@ test_that("palette_sv default theme is light", {
   light_cols   <- palette_sv(2, theme = "light")
   expect_identical(default_cols, light_cols)
 })
+
+test_that("binary_palette raises error for invalid theme even when positions supplied", {
+  expect_error(binary_palette(positions = c(0.1, 0.9), theme = "neon"),
+               regexp = "theme")
+})

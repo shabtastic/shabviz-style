@@ -103,6 +103,10 @@ palette_sv <- function(n, ordered = FALSE, cmap = "viridis",
 #' @export
 binary_palette <- function(cmap = "viridis", positions = NULL,
                            theme = "light") {
+  if (!theme %in% .valid_themes) {
+    stop(sprintf("theme must be one of %s, got '%s'",
+                 paste(shQuote(.valid_themes), collapse = ", "), theme))
+  }
   fn <- .cmap_function(cmap)
   if (is.null(positions)) {
     positions <- .resolve_range(cmap, NULL, NULL, theme)

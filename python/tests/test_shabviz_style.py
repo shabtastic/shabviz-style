@@ -122,6 +122,11 @@ def test_binary_palette_dark():
     assert len(pair) == 2
 
 
+def test_binary_palette_invalid_theme_raises_even_with_positions():
+    with pytest.raises(ValueError, match="theme"):
+        pf.binary_palette(positions=(0.1, 0.9), theme='neon')
+
+
 def test_apply_style_rc_overrides_still_work():
     pf.apply_style(theme='dark', rc_overrides={'lines.linewidth': 3.0})
     assert mpl.rcParams['lines.linewidth'] == 3.0

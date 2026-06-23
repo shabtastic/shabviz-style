@@ -257,6 +257,8 @@ def binary_palette(cmap: str = 'viridis', positions=None,
     theme : str, default 'light'
         One of 'light', 'dark', 'black'. Used when positions is None.
     """
+    if theme not in _VALID_THEMES:
+        raise ValueError(f"theme must be one of {sorted(_VALID_THEMES)!r}, got {theme!r}")
     cm = mpl.colormaps[cmap]
     if positions is None:
         positions = _resolve_range(cmap, None, None, theme)
@@ -411,6 +413,8 @@ def setup(cmap: str = 'viridis', font: str = 'Inter',
         'dark'  — near-black (#1a1a1a) background, light gray text.
         'black' — pure black background, white text (TRI slide deck).
     """
+    if theme not in _VALID_THEMES:
+        raise ValueError(f"theme must be one of {sorted(_VALID_THEMES)!r}, got {theme!r}")
     if auto_install:
         ok = install_font(font)
         if verbose:

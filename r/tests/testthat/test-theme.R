@@ -59,3 +59,41 @@ test_that("binary_palette raises error for invalid theme even when positions sup
   expect_error(binary_palette(positions = c(0.1, 0.9), theme = "neon"),
                regexp = "theme")
 })
+
+test_that("theme_shabviz light has white background", {
+  t <- theme_shabviz(theme = "light")
+  expect_equal(t$plot.background$fill, "white")
+  expect_equal(t$panel.background$fill, "white")
+})
+
+test_that("theme_shabviz dark has #1a1a1a background", {
+  t <- theme_shabviz(theme = "dark")
+  expect_equal(t$plot.background$fill, "#1a1a1a")
+  expect_equal(t$panel.background$fill, "#1a1a1a")
+})
+
+test_that("theme_shabviz black has #000000 background", {
+  t <- theme_shabviz(theme = "black")
+  expect_equal(t$plot.background$fill, "#000000")
+})
+
+test_that("theme_shabviz dark has light text", {
+  t <- theme_shabviz(theme = "dark")
+  expect_equal(t$text$colour, "#e0e0e0")
+})
+
+test_that("theme_shabviz black has white text", {
+  t <- theme_shabviz(theme = "black")
+  expect_equal(t$text$colour, "#ffffff")
+})
+
+test_that("theme_shabviz default theme is light", {
+  t_default <- theme_shabviz()
+  t_light   <- theme_shabviz(theme = "light")
+  expect_equal(t_default$plot.background$fill,
+               t_light$plot.background$fill)
+})
+
+test_that("setup invalid theme raises error", {
+  expect_error(setup(theme = "neon"), regexp = "theme")
+})

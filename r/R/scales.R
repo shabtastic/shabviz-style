@@ -3,18 +3,19 @@
 
 #' Discrete shabviz color scale
 #' @param cmap Colormap name (default "viridis").
-#' @param ordered If TRUE, colors are in colormap order. If FALSE (default),
-#'   reordered so the first two are endpoints (binary-friendly).
-#' @param lo,hi Sample range. NULL uses per-cmap defaults.
+#' @param ordered If TRUE, colors are in colormap order.
+#' @param lo,hi Sample range. NULL uses per-cmap/per-theme defaults.
+#' @param theme Color theme: "light", "dark", or "black". Default "light".
 #' @param ... Passed to ggplot2::discrete_scale().
 #' @export
 scale_colour_shabviz_d <- function(cmap = "viridis", ordered = FALSE,
-                                  lo = NULL, hi = NULL, ...) {
+                                   lo = NULL, hi = NULL,
+                                   theme = "light", ...) {
   ggplot2::discrete_scale(
     aesthetics = "colour",
     scale_name = "shabviz_d",
     palette = function(n) palette_sv(n, ordered = ordered, cmap = cmap,
-                                     lo = lo, hi = hi),
+                                     lo = lo, hi = hi, theme = theme),
     ...
   )
 }
@@ -27,12 +28,13 @@ scale_color_shabviz_d <- scale_colour_shabviz_d
 #' @inheritParams scale_colour_shabviz_d
 #' @export
 scale_fill_shabviz_d <- function(cmap = "viridis", ordered = FALSE,
-                                lo = NULL, hi = NULL, ...) {
+                                 lo = NULL, hi = NULL,
+                                 theme = "light", ...) {
   ggplot2::discrete_scale(
     aesthetics = "fill",
     scale_name = "shabviz_d",
     palette = function(n) palette_sv(n, ordered = ordered, cmap = cmap,
-                                     lo = lo, hi = hi),
+                                     lo = lo, hi = hi, theme = theme),
     ...
   )
 }

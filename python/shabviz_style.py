@@ -227,7 +227,7 @@ def palette(n: int, ordered: bool = False, cmap: str = 'viridis',
         Any sequential matplotlib/seaborn colormap.
     lo, hi : float, optional
         Sample range within the colormap. Defaults are tuned per-cmap (see
-        ``_DEFAULT_RANGE``) so ``lo=0.05`` for viridis but ``0.20`` for the
+        ``_RANGE_LIGHT``) so ``lo=0.05`` for viridis but ``0.20`` for the
         darker mako/rocket.
 
     Returns
@@ -255,11 +255,11 @@ def binary_palette(cmap: str = 'viridis', positions=None):
     """High-contrast binary pair from a viridis-family colormap.
 
     With ``positions=None``, uses the cmap's default range from
-    ``_DEFAULT_RANGE``. Pass ``positions=(lo, hi)`` to override.
+    ``_RANGE_LIGHT``. Pass ``positions=(lo, hi)`` to override.
     """
     cm = mpl.colormaps[cmap]
     if positions is None:
-        positions = _DEFAULT_RANGE.get(cmap, _FALLBACK_RANGE)
+        positions = _RANGE_LIGHT.get(cmap, _FALLBACK_RANGE)
     return [cm(positions[0]), cm(positions[1])]
 
 

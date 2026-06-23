@@ -48,3 +48,8 @@ def test_theme_colors_keys():
         for key in ('fig_bg', 'axes_bg', 'save_bg', 'text', 'spines',
                     'ticks', 'grid', 'legend_bg', 'legend_edge'):
             assert key in c, f"theme '{theme}' missing key '{key}'"
+
+
+def test_binary_palette_default_returns_two_colors():
+    pair = pf.binary_palette()
+    assert len(pair) == 2
